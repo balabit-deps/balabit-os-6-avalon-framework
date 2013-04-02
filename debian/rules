@@ -1,0 +1,29 @@
+#!/usr/bin/make -f
+# debian/rules for avalon-framework
+
+include /usr/share/cdbs/1/rules/debhelper.mk
+include /usr/share/cdbs/1/class/ant.mk
+
+VERSION	    := $(shell dpkg-parsechangelog | egrep '^Version:' | cut -f2 -d' ' | cut -f1 -d-)
+
+JAVA_HOME := /usr/lib/jvm/default-java
+ANT_HOME  := /usr/share/ant
+
+DEB_JARS := $(ANT_HOME)/lib/ant-launcher.jar excalibur-logkit log4j-1.2 xalan2 $(ANT_HOME)/lib/ant-junit.jar junit
+DEB_ANT_BUILDFILE := debian/build.xml
+DEB_ANT_BUILD_TARGET := jar doc
+DEB_ANT_CHECK_TARGET := test-all
+
+POMS := debian/poms/pom.xml debian/poms/pom_api.xml debian/poms/pom_impl.xml
+
+install/libavalon-framework-java::
+	# Install poms and jar
+	for pom in $(POMS); do \
+		mh_installpom -v -o -plibavalon-framework-java $$pom; \
+		mh_installjar -plibavalon-framework-java -l $$pom \
+			-navalon-framework -i${VERSION} dist/avalon-framework.jar; \
+	done
+
+install/libavalon-framework-java-doc::
+	# remove the zero byte file to fix lintian warning
+	rm -f doc/api/package-list
